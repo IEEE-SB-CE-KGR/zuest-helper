@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Questions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000;
+            background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.08) 1px, transparent 0);
+            background-size: 25px 25px;
+            color: #e5e7eb; /* text-gray-200 */
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #111827; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+        
+        .accent-blue {
+            color: #3b82f6;
+        }
+
+        /* Card styles */
+        .question-card, .create-card {
+            background-color: rgba(17, 24, 39, 0.5); /* bg-gray-900/50 */
+            border: 1px solid #374151; /* border-gray-700 */
+            transition: all 0.2s ease-in-out;
+        }
+        .question-card:hover, .create-card:hover {
+            border-color: #6b7280; /* border-gray-500 */
+        }
+
+        /* Modal styles */
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: #1f2937; /* bg-gray-800 */
+            border: 1px solid #4b5563; /* border-gray-600 */
+        }
+
+        /* Form element styles */
+        .form-input, .form-textarea, .form-select {
+            background-color: #374151; /* bg-gray-700 */
+            border: 1px solid #4b5563; /* border-gray-600 */
+            color: #e5e7eb; /* text-gray-200 */
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #3b82f6; /* blue-500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Action buttons */
+        .action-btn {
+            color: #9ca3af; /* gray-400 */
+            transition: color 0.2s ease-in-out;
+        }
+        .action-btn:hover {
+            color: #ffffff;
+        }
+        .action-btn.delete:hover {
+            color: #ef4444; /* red-500 */
+        }
+        
+        .image-upload-box {
+            background-color: #374151;
+            border: 2px dashed #4b5563;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-black/60 backdrop-blur-lg border-b border-gray-800/50 shadow-sm sticky top-0 z-40">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-gamepad text-2xl accent-blue"></i>
+                        <h1 class="text-xl font-semibold text-white">Game Dashboard</h1>
+                    </div>
+                    <a href="#" class="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-md transition-colors duration-200">
+                        Back to Games
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-white">Manage Questions</h2>
+                    <p class="text-gray-400 mt-1">Game: <span class="font-semibold text-white">Downtown History Hunt</span></p>
+                </div>
+            </div>
+
+            <!-- Questions Grid -->
+            <div id="questionsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                 <!-- Add New Question Card -->
+                <button id="addQuestionBtn" class="create-card flex items-center justify-center space-x-3 p-4 rounded-lg border-2 border-dashed border-gray-700 text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-all duration-300 h-full min-h-[190px]">
+                    <i class="fas fa-plus text-2xl"></i>
+                    <span class="font-semibold text-lg">Add New Question</span>
+                </button>
+                <!-- Question cards will be dynamically inserted here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="questionModal" class="fixed inset-0 modal-backdrop z-50 flex justify-center items-start overflow-y-auto p-4 pt-8 pb-8 hidden">
+        <div class="modal-content rounded-lg shadow-2xl w-full max-w-2xl p-8 transform transition-all scale-95 opacity-0" id="questionModalContent">
+            <h3 id="questionModalTitle" class="text-2xl font-semibold text-white mb-6">Add New Question</h3>
+            <form class="space-y-8">
+                <!-- Question Section -->
+                <div class="space-y-4">
+                    <div>
+                        <label for="questionText" class="block text-sm font-medium text-gray-300 mb-1">Question Text</label>
+                        <textarea id="questionText" rows="4" class="form-textarea mt-1 block w-full rounded-md shadow-sm" placeholder="e.g., What year was the city founded?"></textarea>
+                    </div>
+                    <div>
+                        <label for="questionImage" class="block text-sm font-medium text-gray-300 mb-1">Question Image (Optional)</label>
+                        <div class="image-upload-box mt-1 flex justify-center rounded-md px-6 pt-5 pb-6">
+                            <div class="space-y-1 text-center">
+                                <i class="fas fa-image text-4xl text-gray-500"></i>
+                                <div class="flex text-sm text-gray-400">
+                                    <label for="question-image-upload" class="relative cursor-pointer rounded-md font-medium text-blue-500 hover:text-blue-400">
+                                        <span>Upload a file</span>
+                                        <input id="question-image-upload" name="question-image-upload" type="file" class="sr-only">
+                                    </label>
+                                    <p class="pl-1">or drag and drop</p>
+                                </div>
+                                <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="answer" class="block text-sm font-medium text-gray-300 mb-1">Correct Answer</label>
+                        <input type="text" id="answer" class="form-input mt-1 block w-full rounded-md shadow-sm" placeholder="e.g., 1886">
+                    </div>
+                </div>
+                <div class="border-t border-gray-700"></div>
+                <!-- Next Location Clue Section -->
+                <div class="space-y-4">
+                     <div>
+                        <label for="nextLocationClue" class="block text-sm font-medium text-gray-300 mb-1">Next Location Clue</label>
+                        <textarea id="nextLocationClue" rows="4" class="form-textarea mt-1 block w-full rounded-md shadow-sm" placeholder="e.g., Head to the place where books sleep..."></textarea>
+                    </div>
+                     <div>
+                        <label for="clueImage" class="block text-sm font-medium text-gray-300 mb-1">Clue Image (Optional)</label>
+                        <div class="image-upload-box mt-1 flex justify-center rounded-md px-6 pt-5 pb-6">
+                            <div class="space-y-1 text-center">
+                                <i class="fas fa-image text-4xl text-gray-500"></i>
+                                <div class="flex text-sm text-gray-400">
+                                    <label for="clue-image-upload" class="relative cursor-pointer rounded-md font-medium text-blue-500 hover:text-blue-400">
+                                        <span>Upload a file</span>
+                                        <input id="clue-image-upload" name="clue-image-upload" type="file" class="sr-only">
+                                    </label>
+                                    <p class="pl-1">or drag and drop</p>
+                                </div>
+                                <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-4 pt-4">
+                    <button type="button" class="modal-close-btn px-6 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-md text-white font-semibold">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-semibold">Save Question</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="deleteModal" class="fixed inset-0 modal-backdrop z-50 flex justify-center items-center p-4 hidden">
+        <div class="modal-content rounded-lg shadow-2xl w-full max-w-md p-6 transform transition-all scale-95 opacity-0" id="deleteModalContent">
+            <h3 class="text-2xl font-semibold text-red-500 mb-2">Delete Question?</h3>
+            <p class="text-gray-400">This will permanently delete <strong id="questionNameToDelete" class="font-bold text-white"></strong>.</p>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" class="modal-close-btn px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-md text-white">Cancel</button>
+                <button id="confirmDeleteBtn" type="button" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md text-white font-semibold">Delete</button>
+            </div>
+        </div>
+    </div>
+    <div id="qrModal" class="fixed inset-0 modal-backdrop z-50 flex justify-center items-center p-4 hidden">
+        <div class="modal-content rounded-lg shadow-2xl w-full max-w-sm p-6 transform transition-all scale-95 opacity-0" id="qrModalContent">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-white" id="qrQuestionTitle">Question QR Code</h3>
+                <button class="modal-close-btn text-gray-500 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div class="text-center">
+                <p class="text-gray-400 mb-4 text-sm">Players can scan this to open the question directly.</p>
+                <div class="bg-white p-4 rounded-lg inline-block">
+                    <img id="qrCodeImage" src="https://placehold.co/200x200/ffffff/000000?text=Question+QR" alt="Question QR Code">
+                </div>
+                <button id="downloadQrBtn" class="mt-6 w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-semibold py-3 px-4">
+                    <i class="fas fa-download"></i>
+                    <span>Download QR Code</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DATA ---
+        const questions = [
+            { id: 1, text: "What year was the city founded?", answer: "1886", clue: "Head to the place where books sleep..." },
+            { id: 2, text: "What is the name of the tallest building downtown?", answer: "Plaza Tower", clue: "Find the statue of the city's founder." },
+            { id: 3, text: "Which river runs through the city?", answer: "Grand River", clue: "Go to the old bridge by the waterfront." }
+        ];
+
+        // --- ELEMENTS ---
+        const questionsGrid = document.getElementById('questionsGrid');
+        const addQuestionBtn = document.getElementById('addQuestionBtn');
+
+        // --- FUNCTIONS ---
+        const renderCards = (questionsToRender) => {
+            // Clear only existing question cards, not the "Add" button
+            document.querySelectorAll('.question-card').forEach(el => el.remove());
+            document.querySelectorAll('.no-questions-message').forEach(el => el.remove());
+
+            if (questionsToRender.length === 0) {
+                addQuestionBtn.insertAdjacentHTML('afterend', `<p class="no-questions-message text-gray-500 col-span-full">No questions have been added to this game yet.</p>`);
+            } else {
+                 // Render in reverse order so they appear correctly after the "Add" button
+                [...questionsToRender].reverse().forEach(q => {
+                    const cardHTML = `
+                        <div class="question-card rounded-lg flex flex-col justify-between min-h-[190px] cursor-pointer p-6" data-question-id="${q.id}">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <h4 class="text-lg font-semibold text-white pr-2">Question ${q.id}</h4>
+                                </div>
+                                <p class="text-gray-400 mt-2 text-sm truncate">${q.text}</p>
+                            </div>
+                            <div class="mt-4 flex justify-end items-center space-x-4">
+                                <button class="action-btn" title="View QR"><i class="fas fa-qrcode"></i></button>
+                                <button class="action-btn" title="Edit Question"><i class="fas fa-pencil-alt"></i></button>
+                                <button class="action-btn delete" title="Delete Question"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                    addQuestionBtn.insertAdjacentHTML('afterend', cardHTML);
+                });
+            }
+        };
+        
+        // --- MODAL CONTROLS ---
+        const openModal = (modal) => {
+            const content = modal.querySelector('.transform');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                if (content) {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                }
+            }, 10);
+        };
+
+        const closeModal = (modal) => {
+            const content = modal.querySelector('.transform');
+            if (content) {
+                content.classList.add('scale-95', 'opacity-0');
+                content.classList.remove('scale-100', 'opacity-100');
+            }
+            setTimeout(() => { modal.classList.add('hidden'); }, 200);
+        };
+        
+        // --- EVENT HANDLERS ---
+        
+        // Use Event Delegation for the entire grid
+        questionsGrid.addEventListener('click', (e) => {
+            const actionButton = e.target.closest('.action-btn');
+            if (!actionButton) return; // Exit if the click wasn't on an action button
+
+            const card = actionButton.closest('[data-question-id]');
+            if (!card) return; // Exit if the button isn't in a card
+
+            const questionId = card.dataset.questionId;
+            const title = actionButton.getAttribute('title');
+
+            if (title === 'View QR') {
+                document.getElementById('qrQuestionTitle').textContent = `Question ${questionId} QR`;
+                openModal(document.getElementById('qrModal'));
+            } else if (title === 'Edit Question') {
+                const questionData = questions.find(q => q.id == questionId);
+                if (questionData) {
+                    document.getElementById('questionModalTitle').innerText = `Edit Question ${questionId}`;
+                    document.getElementById('questionText').value = questionData.text;
+                    document.getElementById('answer').value = questionData.answer;
+                    document.getElementById('nextLocationClue').value = questionData.clue;
+                    openModal(document.getElementById('questionModal'));
+                }
+            } else if (title === 'Delete Question') {
+                document.getElementById('questionNameToDelete').textContent = `Question ${questionId}`;
+                openModal(document.getElementById('deleteModal'));
+            }
+        });
+
+        addQuestionBtn.addEventListener('click', () => {
+            document.getElementById('questionModalTitle').innerText = 'Add New Question';
+            document.querySelector('#questionModal form').reset();
+            openModal(document.getElementById('questionModal'));
+        });
+        
+        document.querySelectorAll('.modal-close-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                closeModal(e.target.closest('.fixed'));
+            });
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target.matches('.modal-backdrop')) {
+                closeModal(e.target);
+            }
+        });
+
+        document.getElementById('downloadQrBtn').addEventListener('click', () => {
+            const qrImage = document.getElementById('qrCodeImage');
+            const link = document.createElement('a');
+            link.href = qrImage.src;
+            link.download = 'question-qr-code.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // Initial render
+        renderCards(questions);
+    });
+    </script>
+</body>
+</html>
+
